@@ -15,7 +15,6 @@ fn main() {
         panic!("Path variable not set.");
     }
 
-    //if(env::var(key_name))
-    //let mut apiKey = String::new();
-    //env::set_var(key, "0000000000");
+
+
 }
