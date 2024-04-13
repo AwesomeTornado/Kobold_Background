@@ -3,6 +3,16 @@
 version = 3
 
 [[package]]
+name = "Kobold_Background"
+version = "0.1.0"
+dependencies = [
+ "reqwest",
+ "serde",
+ "serde_json",
+ "tokio",
+]
+
+[[package]]
 name = "addr2line"
 version = "0.21.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -948,15 +958,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a56d1686db2308d901306f92a263857ef59ea39678a5458e7cb17f01415101f5"
 dependencies = [
  "tinyvec",
-]
-
-[[package]]
-name = "untitled2"
-version = "0.1.0"
-dependencies = [
- "reqwest",
- "serde",
- "tokio",
 ]
 
 [[package]]
