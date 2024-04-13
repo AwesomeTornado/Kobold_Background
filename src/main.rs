@@ -32,7 +32,7 @@ async fn main() -> Result<(), Error> {
         .header("Client-Agent", "KoboldAiLite:17")
         .send()
         .await.unwrap();
-    println!("{}", res.text().await.unwrap());;
+    println!("{}", res.text().await.unwrap());
     Ok(())
 
 }
