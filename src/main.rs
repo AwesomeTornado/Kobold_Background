@@ -13,11 +13,11 @@ struct TextGenInitResponse {
 }
 #[derive(Serialize, Deserialize)]
 struct TextGenStatus {
-    generations: Generations,
-    finished: bool,
-    processing: bool,
-    restarted: bool,
-    waiting: bool,
+    generations: One,
+    finished: i8,
+    processing: i8,
+    restarted: i8,
+    waiting: i8,
     done: bool,
     faulted: bool,
     wait_time: i32,
@@ -25,19 +25,7 @@ struct TextGenStatus {
     kudos: c_float,
     is_possible: bool
 }
-#[derive(Serialize, Deserialize)]
-struct TextGenStatusNOGEN {
-    finished: i8,
-    processing: i8,
-    restarted: i8,
-    waiting: i8,
-    done: bool,
-    faulted: i8,
-    wait_time: i32,
-    queue_position: i32,
-    kudos: c_float,
-    is_possible: bool
-}
+
 #[derive(Serialize, Deserialize)]
 struct Generations {
     text: String,
@@ -50,6 +38,10 @@ struct Generations {
 }
 #[derive(Serialize, Deserialize)]
 struct Nil {
+}
+#[derive(Serialize, Deserialize)]
+struct One {
+    o: Generations
 }
 
 async fn get_message_id(api_key: String) -> String{
@@ -76,9 +68,31 @@ async fn get_message_id(api_key: String) -> String{
     return message_id;
 }
 
-async fn get_message_status(message_id: String) -> bool{
+async fn get_message_status(message_id: String) -> TextGenStatus {
     let url =  "https://aihorde.net/api/v2/generate/text/status/".to_owned() + &*message_id;
-
+    let mut message_json: TextGenStatus = TextGenStatus {
+        generations: One {
+            o: Generations {
+                text: "".to_string(),
+                seed: 0,
+                gen_metadata: Nil {},
+                worker_id: "".to_string(),
+                worker_name: "".to_string(),
+                model: "".to_string(),
+                state: "".to_string(),
+            }
+        },
+        finished: 0,
+        processing: 0,
+        restarted: 0,
+        waiting: 0,
+        done: false,
+        faulted: false,
+        wait_time: 0,
+        queue_position: 0,
+        kudos: 0.0,
+        is_possible: false,
+    };
     let client = reqwest::Client::new();
     let res = client.get(url)
         .send()
@@ -92,10 +106,11 @@ async fn get_message_status(message_id: String) -> bool{
         Err(_) => message_status = "webreq failed, server returned unexpected result.".parse::<String>().unwrap()
     }
     println!("{}", message_status);
-    let message_json: TextGenStatusNOGEN = serde_json::from_str(&*message_status).expect("json unwrapping error, likely bad webreq");
-    let status = message_json.done;
-    println!("{}", status);
-   return status;
+    if(!message_status.contains("ok")){
+        return message_json;
+    }
+    message_json = serde_json::from_str(&*message_status).expect("json unwrapping error, likely bad webreq");
+    return message_json;
 }
 
 #[tokio::main]
@@ -119,10 +134,19 @@ async fn main() -> Result<(), Error> {
     println!("get_message_id has been run, result of function is:\n{}", message_id);
     //at this point, we have the message response id, and need to wait for the response to be generated.
     let second = std::time::Duration::from_millis(1000);
-    while true {
+    let mut done = false;
+    //I don't want to reinitalize an entire blank textgenstatus object, so i use the failed one from
+    //the get message status function. Lazy, but understandable and fast.
+    let mut final_prompt: TextGenStatus = get_message_status(message_id.clone()).await;
+    while !done {
         thread::sleep(second);
-        get_message_status(message_id.clone()).await;
+        final_prompt = get_message_status(message_id.clone()).await;
+        done = final_prompt.done;
     }
+    //we now have our final prompt in "final prompt"
+    let text = final_prompt.generations.o.text;
+    println!("{}", text);
+    //I did it! we finally have a single prompt generation, ready to send to the dreamers of the horde.
 
 
     Ok(())
