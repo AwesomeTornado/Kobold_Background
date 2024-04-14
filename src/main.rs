@@ -212,32 +212,7 @@ async fn download_image_to(url: &str, file_name: &str) -> Result<()> {
     Ok(())
 }
 
-#[tokio::main]
-async fn main() -> Result<(), Error> {
-
-    println!("Hello, Kobold_background developers!");
-
-    //first and foremost, work to retrieve the users api key, so that prompts are speedy.
-    let key_name = "Kobold_BG_api_Key";
-    let api_key;
-    let key_set = !env::var(key_name).is_err();
-    let archive_dir = "C:/Kobold_Backgrounds/";
-
-    //secondly, ensure that there is a location to store images, and permissions are set
-    if !Path::new(archive_dir).exists() {
-        println!("Some directories need to be created, as this is the first install of this application...");
-        fs::create_dir_all(archive_dir).unwrap();
-    }
-
-
-    if key_set {
-        //comment out this line to use the free api key. (only for debug purposes)
-        api_key = env::var(key_name).expect("0000000000");
-    }else {
-        std::println!("Can't find your API key in any env variables, Please set the path variable \"Kobold_BG_api_Key\" to your koboldai api key\n Thanks");
-        panic!("Path variable not set.");
-    }
-
+async fn change_desktop_background(api_key: String, archive_dir: &str){
     let message_id = get_horde_id(api_key.clone(), "text", "").await;
     println!("get_message_id has been run, result of function is:\n{}", message_id);
     //at this point, we have the message response id, and need to wait for the response to be generated.
@@ -277,6 +252,41 @@ async fn main() -> Result<(), Error> {
     download_image_to(&*img_url, &*file).await.expect("Error downloading image");
 
     wallpaper_windows_user32::set(file).expect("Error setting wallpaper");
+}
+
+#[tokio::main]
+async fn main() -> Result<(), Error> {
+
+    println!("Hello, Kobold_background developers!");
+
+    //first and foremost, work to retrieve the users api key, so that prompts are speedy.
+    let key_name = "Kobold_BG_api_Key";
+    let api_key;
+    let key_set = !env::var(key_name).is_err();
+    let archive_dir = "C:/Kobold_Backgrounds/";
+
+    //secondly, ensure that there is a location to store images, and permissions are set
+    if !Path::new(archive_dir).exists() {
+        println!("Some directories need to be created, as this is the first install of this application...");
+        fs::create_dir_all(archive_dir).unwrap();
+    }
+
+
+    if key_set {
+        //comment out this line to use the free api key. (only for debug purposes)
+        api_key = env::var(key_name).expect("0000000000");
+    }else {
+        std::println!("Can't find your API key in any env variables, Please set the path variable \"Kobold_BG_api_Key\" to your koboldai api key\n Thanks");
+        panic!("Path variable not set.");
+    }
+
+    let second = std::time::Duration::from_millis(10000);
+    loop {
+        change_desktop_background(api_key.clone(), archive_dir).await;
+        thread::sleep(second);
+    }
+
+
     Ok(())
 
 }
