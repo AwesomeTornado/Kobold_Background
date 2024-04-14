@@ -1,8 +1,10 @@
 use std::string::String;
-use std::{env, thread};
+use std::{env, thread, path, fs};
 use std::os::raw::c_float;
+use std::path::Path;
 use serde::{Deserialize, Serialize};
 use reqwest::Error;
+use wallpaper_windows_user32;
 
 #[derive(Serialize, Deserialize)]
 struct TextGenInitResponse {
@@ -80,7 +82,7 @@ async fn get_horde_id(api_key: String, selector: &str, prompt: &str) -> String{
         body = "{\"prompt\":\"### Instruction:Come up with one or two words for a genre of literature, media, or music, then write a five sentence description of an image from that genre. Make sure your response focuses on the elements in an image from that genre. There should be vibrant description, and good imagery, of at least one paragraph. describe the image well. Describe individual elements of the image, including objects and colors.### Response:\",\"params\":{\"n\":1,\"max_context_length\":1024,\"max_length\":80,\"rep_pen\":1.08,\"temperature\":0.5,\"top_p\":0.92,\"top_k\":0,\"top_a\":0,\"typical\":1,\"tfs\":1,\"rep_pen_range\":256,\"rep_pen_slope\":0.7,\"sampler_order\":[6,0,1,3,4,2,5],\"use_default_badwordsids\":false,\"stop_sequence\":[\"### Instruction:\",\"### Response:\"],\"min_p\":0,\"dynatemp_range\":0,\"dynatemp_exponent\":1,\"smoothing_factor\":0},\"workers\":[]}".parse().unwrap();
         url = "https://aihorde.net/api/v2/generate/text/async";
     }else if selector == "image" {
-        body = "{\"prompt\":\"".to_owned() + &*prompt.replace("\n", "") + "### , worst quality, low quality:1.4), EasyNegative, bad anatomy, bad hands, cropped, missing fingers, missing toes, too many toes, too many fingers, missing arms, long neck, Humpbacked, deformed, disfigured, poorly drawn face, distorted face, mutation, mutated, extra limb, ugly, poorly drawn hands, missing limb, floating limbs, disconnected limbs, malformed hands, out of focus, long body, monochrome, symbol, text, logo, door frame, window frame, mirror frame , worst quality, low quality:1.4), EasyNegative, bad anatomy, bad hands, cropped, missing fingers, missing toes, too many toes, too many fingers, missing arms, long neck, Humpbacked, deformed, disfigured, poorly drawn face, distorted face, mutation, mutated, extra limb, ugly, poorly drawn hands, missing limb, floating limbs, disconnected limbs, malformed hands, out of focus, long body, monochrome, symbol, text, logo, door frame, window frame, mirror frame , worst quality, low quality:1.4), EasyNegative, bad anatomy, bad hands, cropped, missing fingers, missing toes, too many toes, too many fingers, missing arms, long neck, Humpbacked, deformed, disfigured, poorly drawn face, distorted face, mutation, mutated, extra limb, ugly, poorly drawn hands, missing limb, floating limbs, disconnected limbs, malformed hands, out of focus, long body, monochrome, symbol, text, logo, door frame, window frame, mirror frame , worst quality, low quality:1.4), EasyNegative, bad anatomy, bad hands, cropped, missing fingers, missing toes, too many toes, too many fingers, missing arms, long neck, Humpbacked, deformed, disfigured, poorly drawn face, distorted face, mutation, mutated, extra limb, ugly, poorly drawn hands, missing limb, floating limbs, disconnected limbs, malformed hands, out of focus, long body, monochrome, symbol, text, logo, door frame, window frame, mirror frame , worst quality, low quality:1.4), EasyNegative, bad anatomy, bad hands, cropped, missing fingers, missing toes, too many toes, too many fingers, missing arms, long neck, Humpbacked, deformed, disfigured, poorly drawn face, distorted face, mutation, mutated, extra limb, ugly, poorly drawn hands, missing limb, floating limbs, disconnected limbs, malformed hands, out of focus, long body, monochrome, symbol, text, logo, door frame, window frame, mirror frame\",\"params\":{\"cfg_scale\":7.5,\"seed\":\"\",\"sampler_name\":\"k_euler_a\",\"height\":1088,\"width\":1920,\"post_processing\":[],\"steps\":40,\"tiling\":false,\"karras\":true,\"hires_fix\":false,\"clip_skip\":1,\"n\":1},\"nsfw\":false,\"censor_nsfw\":true,\"trusted_workers\":true,\"models\":[\"AlbedoBase XL (SDXL)\"],\"r2\":true,\"replacement_filter\":true,\"shared\":false,\"slow_workers\":true,\"dry_run\":false}";
+        body = "{\"prompt\":\"".to_owned() + &*prompt.replace("\n", "").replace("\"","\\\"") + "### , worst quality, low quality:1.4), EasyNegative, bad anatomy, bad hands, cropped, missing fingers, missing toes, too many toes, too many fingers, missing arms, long neck, Humpbacked, deformed, disfigured, poorly drawn face, distorted face, mutation, mutated, extra limb, ugly, poorly drawn hands, missing limb, floating limbs, disconnected limbs, malformed hands, out of focus, long body, monochrome, symbol, text, logo, door frame, window frame, mirror frame , worst quality, low quality:1.4), EasyNegative, bad anatomy, bad hands, cropped, missing fingers, missing toes, too many toes, too many fingers, missing arms, long neck, Humpbacked, deformed, disfigured, poorly drawn face, distorted face, mutation, mutated, extra limb, ugly, poorly drawn hands, missing limb, floating limbs, disconnected limbs, malformed hands, out of focus, long body, monochrome, symbol, text, logo, door frame, window frame, mirror frame , worst quality, low quality:1.4), EasyNegative, bad anatomy, bad hands, cropped, missing fingers, missing toes, too many toes, too many fingers, missing arms, long neck, Humpbacked, deformed, disfigured, poorly drawn face, distorted face, mutation, mutated, extra limb, ugly, poorly drawn hands, missing limb, floating limbs, disconnected limbs, malformed hands, out of focus, long body, monochrome, symbol, text, logo, door frame, window frame, mirror frame , worst quality, low quality:1.4), EasyNegative, bad anatomy, bad hands, cropped, missing fingers, missing toes, too many toes, too many fingers, missing arms, long neck, Humpbacked, deformed, disfigured, poorly drawn face, distorted face, mutation, mutated, extra limb, ugly, poorly drawn hands, missing limb, floating limbs, disconnected limbs, malformed hands, out of focus, long body, monochrome, symbol, text, logo, door frame, window frame, mirror frame , worst quality, low quality:1.4), EasyNegative, bad anatomy, bad hands, cropped, missing fingers, missing toes, too many toes, too many fingers, missing arms, long neck, Humpbacked, deformed, disfigured, poorly drawn face, distorted face, mutation, mutated, extra limb, ugly, poorly drawn hands, missing limb, floating limbs, disconnected limbs, malformed hands, out of focus, long body, monochrome, symbol, text, logo, door frame, window frame, mirror frame\",\"params\":{\"cfg_scale\":7.5,\"seed\":\"\",\"sampler_name\":\"k_euler_a\",\"height\":1088,\"width\":1920,\"post_processing\":[],\"steps\":40,\"tiling\":false,\"karras\":true,\"hires_fix\":false,\"clip_skip\":1,\"n\":1},\"nsfw\":false,\"censor_nsfw\":true,\"trusted_workers\":true,\"models\":[\"AlbedoBase XL (SDXL)\"],\"r2\":true,\"replacement_filter\":true,\"shared\":false,\"slow_workers\":true,\"dry_run\":false}";
         url = "https://aihorde.net/api/v2/generate/async";
     }else{
         panic!("no targets matched selector.");
@@ -203,6 +205,14 @@ async fn main() -> Result<(), Error> {
     let key_name = "Kobold_BG_api_Key";
     let api_key;
     let key_set = !env::var(key_name).is_err();
+    let archive_dir = "C:/Kobold_Backgrounds/";
+
+    //secondly, ensure that there is a location to store images, and permissions are set
+    if !Path::new(archive_dir).exists() {
+        println!("Some directories need to be created, as this is the first install of this application...");
+        fs::create_dir_all(archive_dir).unwrap();
+    }
+
 
     if key_set {
         //comment out this line to use the free api key. (only for debug purposes)
@@ -244,7 +254,14 @@ async fn main() -> Result<(), Error> {
     }
 
     println!("finally complete! We have located your image, and will send you the link now.");
-    println!("{}", final_image.generations[0].img.to_string());
+    let img_url =  final_image.generations[0].img.to_string();
+    println!("{}", img_url);
+
+    let mut file = std::fs::File::create(archive_dir.to_owned() + &*image_id).unwrap();
+    reqwest::blocking::get(img_url)
+        .unwrap()
+        .copy_to(&mut file)
+        .unwrap();
 
     Ok(())
 
