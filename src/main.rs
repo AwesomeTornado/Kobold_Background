@@ -274,9 +274,9 @@ async fn main() -> Result<(), Error> {
     println!("{}", img_url);
 
     let mut file = archive_dir.to_owned() + &*image_id;
-    download_image_to(&*img_url, &*file).await;
+    download_image_to(&*img_url, &*file).await.expect("Error downloading image");
 
-    wallpaper_windows_user32::set(file);
+    wallpaper_windows_user32::set(file).expect("Error setting wallpaper");
     Ok(())
 
 }
