@@ -5,6 +5,8 @@ use std::path::Path;
 use serde::{Deserialize, Serialize};
 use reqwest::Error;
 use wallpaper_windows_user32;
+use std::{fs::File, io::{copy, Cursor}};
+use anyhow::{anyhow, Result};
 
 #[derive(Serialize, Deserialize)]
 struct TextGenInitResponse {
@@ -196,6 +198,20 @@ async fn get_image_status(image_id: String) -> ImageGenStatus{
     return image_json;
 }
 
+async fn download_image_to(url: &str, file_name: &str) -> Result<()> {
+    // Send an HTTP GET request to the URL
+    let response = reqwest::get(url).await?;
+    // Create a new file to write the downloaded image to
+    let mut file = File::create(file_name)?;
+
+    // Create a cursor that wraps the response body
+    let mut content =  Cursor::new(response.bytes().await?);
+    // Copy the content from the cursor to the file
+    copy(&mut content, &mut file)?;
+
+    Ok(())
+}
+
 #[tokio::main]
 async fn main() -> Result<(), Error> {
 
@@ -257,12 +273,10 @@ async fn main() -> Result<(), Error> {
     let img_url =  final_image.generations[0].img.to_string();
     println!("{}", img_url);
 
-    let mut file = std::fs::File::create(archive_dir.to_owned() + &*image_id).unwrap();
-    reqwest::blocking::get(img_url)
-        .unwrap()
-        .copy_to(&mut file)
-        .unwrap();
+    let mut file = archive_dir.to_owned() + &*image_id;
+    download_image_to(&*img_url, &*file).await;
 
+    wallpaper_windows_user32::set(file);
     Ok(())
 
 }
