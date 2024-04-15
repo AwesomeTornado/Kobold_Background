@@ -247,7 +247,7 @@ async fn change_desktop_background(api_key: String, archive_dir: &str){
     let img_url =  final_image.generations[0].img.to_string();
     println!("{}", img_url);
 
-    let mut file = archive_dir.to_owned() + &*image_id;
+    let mut file = archive_dir.to_owned() + &*image_id + ".webp";
     download_image_to(&*img_url, &*file).await.expect("Error downloading image");
 
     wallpaper_windows_user32::set(file).expect("Error setting wallpaper");
@@ -260,9 +260,10 @@ async fn main() -> Result<(), Error> {
 
     //first and foremost, work to retrieve the users api key, so that prompts are speedy.
     let key_name = "Kobold_BG_api_Key";
-    let api_key;
+    let api_key:String;
     let key_set = !env::var(key_name).is_err();
     let archive_dir = "C:/Kobold_Backgrounds/";
+    let delay:i128;
 
     //secondly, ensure that there is a location to store images, and permissions are set
     if !Path::new(archive_dir).exists() {
@@ -270,10 +271,14 @@ async fn main() -> Result<(), Error> {
         fs::create_dir_all(archive_dir).unwrap();
     }
 
-
     if key_set {
         //comment out this line to use the free api key. (only for debug purposes)
-        api_key = env::var(key_name).expect("0000000000");
+        let environment_var = env::var(key_name).expect("0000000000");
+        let both_configs = environment_var.split(",").collect::<Vec<&str>>();
+        api_key = both_configs[0].to_string();
+        println!("{}", api_key);
+        delay = both_configs[1].parse().unwrap();
+        println!("{}", delay);
     }else {
         std::println!("Can't find your API key in any env variables, Please set the path variable \"Kobold_BG_api_Key\" to your koboldai api key\n Thanks");
         panic!("Path variable not set.");
@@ -281,7 +286,7 @@ async fn main() -> Result<(), Error> {
 
     let second = std::time::Duration::from_millis(10000);
     loop {
-        change_desktop_background(api_key.clone(), archive_dir).await;
+        //change_desktop_background(api_key.clone(), archive_dir).await;
         thread::sleep(second);
     }
 
