@@ -6,7 +6,7 @@ use serde::{Deserialize, Serialize};
 use reqwest::Error;
 use wallpaper_windows_user32;
 use std::{fs::File, io::{copy, Cursor}};
-use std::time::{SystemTime};
+use std::time::{SystemTime, UNIX_EPOCH};
 use anyhow::{Result};
 use core::time::Duration;
 use rand::Rng;
@@ -393,17 +393,23 @@ async fn main() -> Result<(), Error> {
         panic!("Path variable not set.");
     }
 
-    let mut start_time;
+    let mut unix_start_interval;
     let mut end_time;
+    let mut unix_end_interval;
     let mut file;
+    let mut time_interval;
     loop {
-        start_time = SystemTime::now();
-        end_time = start_time.checked_add(delay).unwrap();
+        end_time = SystemTime::now().checked_add(delay).unwrap();
         file = cache_desktop_background(api_key.clone(), archive_dir).await;
         while file == "NSFW"{
             file = cache_desktop_background(api_key.clone(), archive_dir).await;
         }
-        async_std::task::sleep(end_time.duration_since(SystemTime::now()).expect("excessive wait time caused crash")).await;
+        unix_start_interval = SystemTime::now().duration_since(UNIX_EPOCH).expect("system time is before the unix epoch lmao");
+        unix_end_interval = end_time.duration_since(UNIX_EPOCH).expect("system time is before the unix epoch lmao");
+        time_interval = unix_end_interval - unix_start_interval;
+        if time_interval > Duration::from_millis(10){
+            async_std::task::sleep(time_interval).await;
+        }
         wallpaper_windows_user32::set(file).expect("Error when setting desktop background.");
     }
 
