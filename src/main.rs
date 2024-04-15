@@ -285,9 +285,9 @@ async fn main() -> Result<(), Error> {
         panic!("Path variable not set.");
     }
 
-    let start_time;
-    let end_time;
-    let file;
+    let mut start_time;
+    let mut end_time;
+    let mut file;
     loop {
         start_time = SystemTime::now();
         end_time = start_time.checked_add(delay).unwrap();
