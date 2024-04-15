@@ -293,7 +293,7 @@ async fn main() -> Result<(), Error> {
         end_time = start_time.checked_add(delay).unwrap();
         file = cache_desktop_background(api_key.clone(), archive_dir).await;
         async_std::task::sleep(end_time.duration_since(SystemTime::now()).unwrap()).await;
-        wallpaper_windows_user32::set(file.await).expect("Error when setting desktop background.");
+        wallpaper_windows_user32::set(file).expect("Error when setting desktop background.");
     }
 
     //Ok(())
