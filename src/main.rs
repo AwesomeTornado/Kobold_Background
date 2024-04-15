@@ -1,12 +1,14 @@
 use std::string::String;
-use std::{env, thread, path, fs};
+use std::{env, fs};
 use std::os::raw::c_float;
 use std::path::Path;
 use serde::{Deserialize, Serialize};
 use reqwest::Error;
 use wallpaper_windows_user32;
 use std::{fs::File, io::{copy, Cursor}};
-use anyhow::{anyhow, Result};
+use std::time::{SystemTime};
+use anyhow::{Result};
+use core::time::Duration;
 
 #[derive(Serialize, Deserialize)]
 struct TextGenInitResponse {
@@ -211,17 +213,17 @@ async fn download_image_to(url: &str, file_name: &str) -> Result<()> {
     Ok(())
 }
 
-async fn change_desktop_background(api_key: String, archive_dir: &str){
+async fn cache_desktop_background(api_key: String, archive_dir: &str) -> String{
     let message_id = get_horde_id(api_key.clone(), "text", "").await;
     println!("get_message_id has been run, result of function is:\n{}", message_id);
     //at this point, we have the message response id, and need to wait for the response to be generated.
-    let second = std::time::Duration::from_millis(10000);
+    let second = Duration::from_millis(10000);
     let mut done = false;
-    //I don't want to reinitalize an entire blank textgenstatus object, so i use the failed one from
+    //I don't want to reinitalize an entire blank textgenstatus object, so I use the failed one from
     //the get message status function. Lazy, but understandable and fast.
     let mut final_prompt: TextGenStatus = get_message_status(message_id.clone()).await;
     while !done {
-        thread::sleep(second);
+        async_std::task::sleep(second).await;
         final_prompt = get_message_status(message_id.clone()).await;
         done = final_prompt.done;
     }
@@ -234,11 +236,11 @@ async fn change_desktop_background(api_key: String, archive_dir: &str){
     println!("{}", image_id);
 
     done = false;
-    //I don't want to reinitalize an entire blank imagegenstatus object, so i use the failed one from
+    //I don't want to reinitalize an entire blank imagegenstatus object, so I use the failed one from
     //the get message status function. Lazy, but understandable and fast.
     let mut final_image: ImageGenStatus = get_image_status(image_id.clone()).await;
     while !done {
-        thread::sleep(second);
+        async_std::task::sleep(second).await;
         final_image = get_image_status(image_id.clone()).await;
         done = final_image.done;
     }
@@ -249,8 +251,7 @@ async fn change_desktop_background(api_key: String, archive_dir: &str){
 
     let mut file = archive_dir.to_owned() + &*image_id + ".webp";
     download_image_to(&*img_url, &*file).await.expect("Error downloading image");
-
-    wallpaper_windows_user32::set(file).expect("Error setting wallpaper");
+    return file;
 }
 
 #[tokio::main]
@@ -263,7 +264,7 @@ async fn main() -> Result<(), Error> {
     let api_key:String;
     let key_set = !env::var(key_name).is_err();
     let archive_dir = "C:/Kobold_Backgrounds/";
-    let delay:i128;
+    let delay:Duration;
 
     //secondly, ensure that there is a location to store images, and permissions are set
     if !Path::new(archive_dir).exists() {
@@ -277,20 +278,21 @@ async fn main() -> Result<(), Error> {
         let both_configs = environment_var.split(",").collect::<Vec<&str>>();
         api_key = both_configs[0].to_string();
         println!("{}", api_key);
-        delay = both_configs[1].parse().unwrap();
-        println!("{}", delay);
+        delay = Duration::milliseconds(both_configs[1].parse().unwrap());
     }else {
         std::println!("Can't find your API key in any env variables, Please set the path variable \"Kobold_BG_api_Key\" to your koboldai api key\n Thanks");
         panic!("Path variable not set.");
     }
 
-    let second = std::time::Duration::from_millis(10000);
+    let start_time;
+    let end_time;
     loop {
-        //change_desktop_background(api_key.clone(), archive_dir).await;
-        thread::sleep(second);
+        start_time = SystemTime::now();
+        end_time = start_time.checked_add(delay).unwrap();
+        cache_desktop_background(api_key.clone(), archive_dir).await;
+        async_std::task::sleep(end_time.duration_since(SystemTime::now()).unwrap()).await;
     }
 
-
-    Ok(())
+    //Ok(())
 
 }
