@@ -249,7 +249,7 @@ async fn cache_desktop_background(api_key: String, archive_dir: &str) -> String{
     let img_url =  final_image.generations[0].img.to_string();
     println!("{}", img_url);
 
-    let mut file = archive_dir.to_owned() + &*image_id + ".webp";
+    let file = archive_dir.to_owned() + &*image_id + ".webp";
     download_image_to(&*img_url, &*file).await.expect("Error downloading image");
     return file;
 }
@@ -291,7 +291,7 @@ async fn main() -> Result<(), Error> {
     loop {
         start_time = SystemTime::now();
         end_time = start_time.checked_add(delay).unwrap();
-        file = cache_desktop_background(api_key.clone(), archive_dir);
+        file = cache_desktop_background(api_key.clone(), archive_dir).await;
         async_std::task::sleep(end_time.duration_since(SystemTime::now()).unwrap()).await;
         wallpaper_windows_user32::set(file.await).expect("Error when setting desktop background.");
     }
