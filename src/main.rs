@@ -254,6 +254,7 @@ async fn cache_desktop_background(api_key: String, archive_dir: &str) -> String{
     return file;
 }
 
+
 #[tokio::main]
 async fn main() -> Result<(), Error> {
 
@@ -286,11 +287,13 @@ async fn main() -> Result<(), Error> {
 
     let start_time;
     let end_time;
+    let file;
     loop {
         start_time = SystemTime::now();
         end_time = start_time.checked_add(delay).unwrap();
-        cache_desktop_background(api_key.clone(), archive_dir).await;
+        file = cache_desktop_background(api_key.clone(), archive_dir);
         async_std::task::sleep(end_time.duration_since(SystemTime::now()).unwrap()).await;
+        wallpaper_windows_user32::set(file.await).expect("Error when setting desktop background.");
     }
 
     //Ok(())
