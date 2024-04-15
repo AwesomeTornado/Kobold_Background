@@ -9,6 +9,103 @@ use std::{fs::File, io::{copy, Cursor}};
 use std::time::{SystemTime};
 use anyhow::{Result};
 use core::time::Duration;
+use rand::Rng;
+
+async fn return_genre() -> String {
+    let mut rng = rand::thread_rng();
+    let genres = [
+    "Poetry",
+    "Drama",
+    "Mystery",
+    "Fantasy",
+    "Science Fiction",
+    "Romance",
+    "Horror",
+    "Thriller",
+    "Comedy",
+    "Satire",
+    "Historical Fiction",
+    "Adventure",
+    "Biography",
+    "Autobiography",
+    "Memoir",
+    "Young Adult (YA)",
+    "Children's Literature",
+    "Bildungsroman (Coming-of-age)",
+    "Dystopian",
+    "Utopian",
+    "Absurdist",
+    "Magical Realism",
+    "Realistic Fiction",
+    "Paranormal",
+    "Mythology",
+    "Fairy Tale",
+    "Fable",
+    "Folklore",
+    "Epic",
+    "Tragedy",
+    "Comedy of Manners",
+    "Metafiction",
+    "Experimental Literature",
+    "Satirical Fiction",
+    "Legal Thriller",
+    "Psychological Thriller",
+    "Espionage",
+    "Portrait",
+    "Landscape",
+    "Still Life",
+    "Abstract",
+    "Surrealism",
+    "Impressionism",
+    "Cubism",
+    "Expressionism",
+    "Realism",
+    "Pop Art",
+    "Conceptual Art",
+    "Street ",
+    "Fashion ",
+    "Wildlife ",
+    "Documentary ",
+    "Macro ",
+    "Black and White ",
+    "High Dynamic Range (HDR) ",
+    "Panoramic ",
+    "Aerial ",
+    "Astro",
+    "Food ",
+    "Sports ",
+    "Architectural ",
+    "Event ",
+    "Nature ",
+    "Fine Art ",
+    "Baroque",
+    "Renaissance",
+    "Rococo",
+    "Neoclassical",
+    "Romanticism",
+    "Abstract Expressionism",
+    "Minimalism",
+    "Postmodernism",
+    "Art Deco",
+    "Art Nouveau",
+    "Gothic",
+    "Pre-Raphaelite",
+    "Fauvism",
+    "Dadaism",
+    "Constructivism",
+    "Pointillism",
+    "Symbolism",
+    "Cubo-Futurism",
+    "Neo-Impressionism",
+    "Social Realism",
+    "Abstract Art",
+    "Hyperrealism",
+    "Street Art",
+    "Photorealism"
+        ];
+    let string: String = genres[rng.gen_range(0..genres.len())].parse().unwrap();
+    return string;
+}
 
 #[derive(Serialize, Deserialize)]
 struct TextGenInitResponse {
@@ -83,7 +180,8 @@ async fn get_horde_id(api_key: String, selector: &str, prompt: &str) -> String{
     let body:String;
     let url;
     if selector == "text" {
-        body = "{\"prompt\":\"### Instruction:Come up with one or two words for a genre of literature, media, or music, then write a five sentence description of an image from that genre. Make sure your response focuses on the elements in an image from that genre. There should be vibrant description, and good imagery, of at least one paragraph. describe the image well. Describe individual elements of the image, including objects and colors. DO NOT INCLUDE PEOPLE. DO NOT INCLUDE WOMEN. DO NOT INCLUDE EXPLICIT CONTENT.### Response:\",\"params\":{\"n\":1,\"max_context_length\":1024,\"max_length\":80,\"rep_pen\":1.08,\"temperature\":0.5,\"top_p\":0.92,\"top_k\":0,\"top_a\":0,\"typical\":1,\"tfs\":1,\"rep_pen_range\":256,\"rep_pen_slope\":0.7,\"sampler_order\":[6,0,1,3,4,2,5],\"use_default_badwordsids\":false,\"stop_sequence\":[\"### Instruction:\",\"### Response:\"],\"min_p\":0,\"dynatemp_range\":0,\"dynatemp_exponent\":1,\"smoothing_factor\":0},\"workers\":[]}".parse().unwrap();
+        let genre = return_genre().await;
+        body = ("{\"prompt\":\"### Instruction:Write a description of an image stemming from the genre of ".to_owned() + &*genre + &*". Make sure your response focuses on the elements in an image from ".to_owned() + &*genre + &*". There should be vibrant description, and good imagery, of at least one paragraph. describe the image well. Describe individual elements of the image, including objects and colors. DO NOT INCLUDE PEOPLE. DO NOT INCLUDE WOMEN. DO NOT INCLUDE EXPLICIT CONTENT. be as descriptive about ".to_owned() + &*genre + &*" as possible. ### Response:\",\"params\":{\"n\":1,\"max_context_length\":1024,\"max_length\":80,\"rep_pen\":1.08,\"temperature\":0.5,\"top_p\":0.92,\"top_k\":0,\"top_a\":0,\"typical\":1,\"tfs\":1,\"rep_pen_range\":256,\"rep_pen_slope\":0.7,\"sampler_order\":[6,0,1,3,4,2,5],\"use_default_badwordsids\":false,\"stop_sequence\":[\"### Instruction:\",\"### Response:\"],\"min_p\":0,\"dynatemp_range\":0,\"dynatemp_exponent\":1,\"smoothing_factor\":0},\"workers\":[]}").parse().unwrap();
         url = "https://aihorde.net/api/v2/generate/text/async";
     }else if selector == "image" {
         body = "{\"prompt\":\"".to_owned() + &*prompt.replace("\n", "").replace("\"","\\\"") +  "beautiful, sharp, clear, focused ### People, persons, women, nsfw, explicit, realistic, easyNegative, bad anatomy, bad hands, cropped, missing fingers, missing toes, too many toes, too many fingers, missing arms, long neck, Humpbacked, deformed, disfigured, poorly drawn face, distorted face, mutation, mutated, extra limb, ugly, poorly drawn hands, missing limb, floating limbs, disconnected limbs, malformed hands, out of focus, long body, monochrome, symbol, text, logo, door frame, window frame, mirror frame , worst quality, low quality:1.4), EasyNegative, bad anatomy, bad hands, cropped, missing fingers, missing toes, too many toes, too many fingers, missing arms, long neck, Humpbacked, deformed, disfigured, poorly drawn face, distorted face, mutation, mutated, extra limb, ugly, poorly drawn hands, missing limb, floating limbs, disconnected limbs, malformed hands, out of focus, long body, monochrome, symbol, text, logo, door frame, window frame, mirror frame\",\"params\":{\"cfg_scale\":7.5,\"seed\":\"\",\"sampler_name\":\"k_euler_a\",\"height\":1088,\"width\":1920,\"post_processing\":[],\"steps\":40,\"tiling\":false,\"karras\":true,\"hires_fix\":false,\"clip_skip\":1,\"n\":1},\"nsfw\":false,\"censor_nsfw\":true,\"trusted_workers\":true,\"models\":[\"AlbedoBase XL (SDXL)\"],\"r2\":true,\"replacement_filter\":true,\"shared\":false,\"slow_workers\":true,\"dry_run\":false}";        url = "https://aihorde.net/api/v2/generate/async";
@@ -195,6 +293,10 @@ async fn get_image_status(image_id: String) -> ImageGenStatus{
     if !image_status.contains("ok") {
         return image_json;
     }
+    if image_status.contains("censor"){
+        image_json.faulted = true;
+        return image_json;
+    }
     image_json = serde_json::from_str(&*image_status).expect("json unwrapping error, likely bad webreq");
     return image_json;
 }
@@ -243,15 +345,21 @@ async fn cache_desktop_background(api_key: String, archive_dir: &str) -> String{
         async_std::task::sleep(second).await;
         final_image = get_image_status(image_id.clone()).await;
         done = final_image.done;
+        if final_image.faulted == true{
+            break;
+        }
     }
 
-    println!("finally complete! We have located your image, and will send you the link now.");
-    let img_url =  final_image.generations[0].img.to_string();
-    println!("{}", img_url);
+    if done{
+        println!("finally complete! We have located your image, and will send you the link now.");
+        let img_url =  final_image.generations[0].img.to_string();
+        println!("{}", img_url);
 
-    let file = archive_dir.to_owned() + &*image_id + ".webp";
-    download_image_to(&*img_url, &*file).await.expect("Error downloading image");
-    return file;
+        let file = archive_dir.to_owned() + &*image_id + ".webp";
+        download_image_to(&*img_url, &*file).await.expect("Error downloading image");
+        return file;
+    }
+    return "NSFW".to_string();
 }
 
 
@@ -292,7 +400,10 @@ async fn main() -> Result<(), Error> {
         start_time = SystemTime::now();
         end_time = start_time.checked_add(delay).unwrap();
         file = cache_desktop_background(api_key.clone(), archive_dir).await;
-        async_std::task::sleep(end_time.duration_since(SystemTime::now()).unwrap()).await;
+        while file != "NSFW"{
+            file = cache_desktop_background(api_key.clone(), archive_dir).await;
+        }
+        async_std::task::sleep(end_time.duration_since(SystemTime::now()).expect("excessive wait time caused crash")).await;
         wallpaper_windows_user32::set(file).expect("Error when setting desktop background.");
     }
 
