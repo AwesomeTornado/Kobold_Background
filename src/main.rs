@@ -293,7 +293,7 @@ async fn get_image_status(image_id: String) -> ImageGenStatus{
     if !image_status.contains("ok") {
         return image_json;
     }
-    if image_status.contains("censored"){
+    if image_status.contains("\"censored\":true"){
         image_json.faulted = true;
         return image_json;
     }
