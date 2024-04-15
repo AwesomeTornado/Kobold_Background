@@ -400,7 +400,7 @@ async fn main() -> Result<(), Error> {
         start_time = SystemTime::now();
         end_time = start_time.checked_add(delay).unwrap();
         file = cache_desktop_background(api_key.clone(), archive_dir).await;
-        while file != "NSFW"{
+        while file == "NSFW"{
             file = cache_desktop_background(api_key.clone(), archive_dir).await;
         }
         async_std::task::sleep(end_time.duration_since(SystemTime::now()).expect("excessive wait time caused crash")).await;
