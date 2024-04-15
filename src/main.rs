@@ -279,7 +279,7 @@ async fn main() -> Result<(), Error> {
         let both_configs = environment_var.split(",").collect::<Vec<&str>>();
         api_key = both_configs[0].to_string();
         println!("{}", api_key);
-        delay = Duration::milliseconds(both_configs[1].parse().unwrap());
+        delay = Duration::from_millis(both_configs[1].parse().unwrap());
     }else {
         std::println!("Can't find your API key in any env variables, Please set the path variable \"Kobold_BG_api_Key\" to your koboldai api key\n Thanks");
         panic!("Path variable not set.");
